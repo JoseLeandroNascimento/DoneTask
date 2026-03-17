@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">DoneTask</string>
+    <string name="minhas_listas">Minhas Listas</string>
+    <string name="icone_menu">icone menu</string>
+    <string name="mais_opcoes">Mais opções</string>
+    <string name="icone_de_representacao_da_lista">icone de representação da lista</string>
+    <string name="add_list">add list</string>
+    <string name="progresso_tarefas">%1$d/%2$d tarefas</string>
+    <string name="icone_de_lista">icone de lista</string>
+    <string name="selecionar_cor">selecionar cor</string>
+</resources>
