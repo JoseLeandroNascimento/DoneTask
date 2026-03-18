@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.joseleandro.donetask.ui.MainScreen
+import com.joseleandro.donetask.ui.App
 import com.joseleandro.donetask.ui.theme.DoneTaskTheme
 
 class MainActivity : ComponentActivity() {
@@ -15,7 +15,7 @@ class MainActivity : ComponentActivity() {
             DoneTaskTheme(
                 dynamicColor = false
             ) {
-                MainScreen()
+                App()
             }
         }
     }

@@ -8,4 +8,7 @@
     <string name="progresso_tarefas">%1$d/%2$d tarefas</string>
     <string name="icone_de_lista">icone de lista</string>
     <string name="selecionar_cor">selecionar cor</string>
+    <string name="voltar">voltar</string>
+    <string name="icone_da_lista_detalhes">Icone da lista detalhes</string>
+    <string name="adicionar_tarefa">Adicionar tarefa</string>
 </resources>

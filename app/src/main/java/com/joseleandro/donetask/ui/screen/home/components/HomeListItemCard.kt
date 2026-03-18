@@ -2,6 +2,7 @@ package com.joseleandro.donetask.ui.screen.home.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -34,21 +36,25 @@ fun HomeListItemCard(
     icon: ImageVector,
     colorRepresentation: Color,
     totalTasks: Int,
-    completedTasks: Int = 0
+    completedTasks: Int = 0,
+    onClick: () -> Unit
 ) {
+
+    val shapeCard = MaterialTheme.shapes.medium
 
     Surface(
         modifier = modifier
+            .clip(shape = shapeCard)
+            .clickable(onClick = onClick)
             .fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp,
-        shape = MaterialTheme.shapes.medium,
+        shape = shapeCard,
         border = BorderStroke(
             width = 1.dp,
             color = MaterialTheme.colorScheme.outline.copy(alpha = .1f)
         ),
-
-        ) {
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -121,7 +127,8 @@ private fun HomeListItemCardDarkPreview() {
             icon = Icons.Default.Build,
             colorRepresentation = Color.Red,
             totalTasks = 10,
-            completedTasks = 5
+            completedTasks = 5,
+            onClick = {}
         )
     }
 }
@@ -138,7 +145,8 @@ private fun HomeListItemCardLisghtPreview() {
             icon = Icons.Default.Build,
             colorRepresentation = Color.Red,
             totalTasks = 10,
-            completedTasks = 5
+            completedTasks = 5,
+            onClick = {}
         )
     }
 }

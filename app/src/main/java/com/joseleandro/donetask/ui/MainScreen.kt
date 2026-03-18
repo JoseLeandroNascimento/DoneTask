@@ -62,7 +62,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
         ) {
             NavDisplay(
                 backStack = backStack,
-                onBack = navigationViewModel::onBack,
+                onBack = navigationViewModel::unselectedTab,
                 entryProvider = entryProvider {
                     entry<TabScreen.HomeTabScreen> {
                         HomeScreen()
