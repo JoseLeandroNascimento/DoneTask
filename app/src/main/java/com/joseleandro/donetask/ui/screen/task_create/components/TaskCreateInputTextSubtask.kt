@@ -4,7 +4,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
@@ -20,10 +23,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component1
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.joseleandro.donetask.R
@@ -36,11 +40,13 @@ fun TaskCreateInputTextSubtask(
     value: String,
     onValueChange: (String) -> Unit,
     checked: Boolean = false,
+    enabledChecked: Boolean = true,
     onCheckedChange: () -> Unit,
-    onAddNewSubtask: () -> Unit
+    trailingIcon: ImageVector = Icons.Default.Add,
+    onTrailingIconClick: () -> Unit
 ) {
 
-    val (input) = remember { FocusRequester.createRefs() }
+    val input = remember { FocusRequester() }
 
     BasicTextField(
         modifier = modifier
@@ -53,7 +59,21 @@ fun TaskCreateInputTextSubtask(
                 MaterialTheme.colorScheme.onSurface
             )
         ),
-        onValueChange = onValueChange
+        maxLines = 1,
+        onValueChange = onValueChange,
+        textStyle = MaterialTheme.typography.labelLarge.copy(
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = .6f)
+        ),
+        keyboardOptions = KeyboardOptions(
+            imeAction = ImeAction.Done // Estável para evitar bug de sumir letra
+        ),
+        keyboardActions = KeyboardActions(
+            onDone = {
+                if (value.isNotBlank()) {
+                    onTrailingIconClick()
+                }
+            }
+        )
     ) { innerTextField ->
 
         Row(
@@ -65,6 +85,7 @@ fun TaskCreateInputTextSubtask(
 
 
             RadioButton(
+                enabled = enabledChecked,
                 onClick = onCheckedChange,
                 selected = checked,
             )
@@ -74,9 +95,11 @@ fun TaskCreateInputTextSubtask(
                     .weight(1f)
                     .padding(end = 4.dp),
             ) {
-                if (value.trim().isEmpty()) {
+
+                if (value.isEmpty()) {
                     label()
                 }
+
                 innerTextField()
 
             }
@@ -88,11 +111,11 @@ fun TaskCreateInputTextSubtask(
                         input.requestFocus()
                     }
 
-                    onAddNewSubtask()
+                    onTrailingIconClick()
                 }
             ) {
                 Icon(
-                    imageVector = Icons.Default.Add,
+                    imageVector = trailingIcon,
                     contentDescription = stringResource(R.string.adicionar_subtarefa)
                 )
             }
@@ -127,7 +150,7 @@ private fun TaskCreateInputTextSubtaskLightPreview() {
             },
             onCheckedChange = {},
             checked = true,
-            onAddNewSubtask = {}
+            onTrailingIconClick = {}
         )
     }
 }
@@ -159,7 +182,7 @@ private fun TaskCreateInputTextSubtaskDarkPreview() {
             },
             onCheckedChange = {},
             checked = false,
-            onAddNewSubtask = {}
+            onTrailingIconClick = {}
         )
     }
 }

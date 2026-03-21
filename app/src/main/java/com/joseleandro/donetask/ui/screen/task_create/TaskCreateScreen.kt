@@ -1,9 +1,9 @@
 package com.joseleandro.donetask.ui.screen.task_create
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -14,7 +14,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -36,9 +35,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.AccessTimeFilled
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.OutlinedFlag
@@ -62,6 +64,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -86,6 +89,13 @@ import com.joseleandro.donetask.ui.screen.task_create.components.TaskCreateInput
 import com.joseleandro.donetask.ui.theme.DoneTaskTheme
 import com.joseleandro.donetask.ui.viewmodel.NavigationViewModel
 import org.koin.androidx.compose.koinViewModel
+import java.util.UUID
+
+data class SubtaskModel(
+    val id: UUID = UUID.randomUUID(),
+    var name: String,
+    val checked: Boolean
+)
 
 @Composable
 fun TaskCreateScreen() {
@@ -106,6 +116,9 @@ fun TaskCreateScreen(
     var activeAlarm by remember { mutableStateOf(false) }
     var selectedPriority by remember { mutableIntStateOf(1) } // 0: Baixa, 1: Média, 2: Alta
     var selectedList by remember { mutableStateOf(myListsMock.first()) }
+
+    val subtasks = remember { mutableStateListOf<SubtaskModel>() }
+    var nameSubtask by remember { mutableStateOf("") }
 
 
     Scaffold(
@@ -174,7 +187,7 @@ fun TaskCreateScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
 
-            // Selecionar Lista (Layout Moderno Circular)
+            // Selecionar Lista
             Column(
                 modifier = Modifier.padding(top = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -431,6 +444,31 @@ fun TaskCreateScreen(
                             .fillMaxWidth()
                             .padding(8.dp)
                     ) {
+
+                        Column(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+
+                            subtasks.forEachIndexed { index, subtask ->
+                                TaskCreateInputTextSubtask(
+                                    label = { Text("Subtarefa ${index + 1}") },
+                                    value = subtask.name,
+                                    onValueChange = { newName ->
+                                        subtasks[index] = subtask.copy(name = newName)
+                                    },
+                                    checked = subtask.checked,
+                                    enabledChecked = true,
+                                    onCheckedChange = {
+                                        subtasks[index] = subtask.copy(checked = !subtask.checked)
+                                    },
+                                    trailingIcon =  Icons.Default.Close,
+                                    onTrailingIconClick = {
+                                        subtasks.removeAt(index)
+                                    }
+                                )
+                            }
+                        }
+
                         TaskCreateInputTextSubtask(
                             label = {
                                 Text(
@@ -440,20 +478,35 @@ fun TaskCreateScreen(
                                     )
                                 )
                             },
-                            value = "",
-                            onValueChange = {},
+                            value = nameSubtask,
+                            onValueChange = {
+                                nameSubtask = it
+                            },
                             checked = false,
+                            enabledChecked = false,
                             onCheckedChange = {},
-                            onAddNewSubtask = {}
+                            trailingIcon = if (nameSubtask.isEmpty()) Icons.Default.Add else Icons.Default.Check,
+                            onTrailingIconClick = {
+                                if (nameSubtask.isNotBlank()) {
+                                    subtasks.add(
+                                        SubtaskModel(
+                                            name = nameSubtask,
+                                            checked = false
+                                        )
+                                    )
+                                    nameSubtask = ""
+                                }
+                            }
                         )
                     }
                 }
             }
+
+            Spacer(
+                modifier = Modifier.height(40.dp)
+            )
         }
 
-        Spacer(
-            modifier = Modifier.height(40.dp)
-        )
     }
 
 }
@@ -599,9 +652,7 @@ private fun PriorityItem(
 @Composable
 private fun TaskReminderRow(icon: ImageVector, label: String, value: String) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(48.dp),
+        modifier = Modifier.fillMaxWidth().height(48.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(icon, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
