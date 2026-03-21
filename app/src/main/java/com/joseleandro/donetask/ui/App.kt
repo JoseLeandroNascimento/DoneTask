@@ -8,6 +8,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import com.joseleandro.donetask.domain.model.Screen
 import com.joseleandro.donetask.ui.screen.list_details.ListDetailScreen
+import com.joseleandro.donetask.ui.screen.task_create.TaskCreateScreen
 import com.joseleandro.donetask.ui.viewmodel.NavigationViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -28,6 +29,10 @@ fun App(modifier: Modifier = Modifier) {
 
             entry<Screen.ListDetailScreen> {
                 ListDetailScreen(listId = it.listId)
+            }
+
+            entry<Screen.TaskCreateScreen> {
+                TaskCreateScreen()
             }
         }
     )

@@ -1,13 +1,9 @@
 package com.joseleandro.donetask.ui.screen.list_details
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clipScrollableContainer
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
@@ -19,15 +15,18 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -50,67 +49,79 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.joseleandro.donetask.R
+import com.joseleandro.donetask.domain.model.Screen
+import com.joseleandro.donetask.ui.screen.home.ListModel
 import com.joseleandro.donetask.ui.screen.home.myListsMock
 import com.joseleandro.donetask.ui.screen.list_details.components.ProgressCard
 import com.joseleandro.donetask.ui.theme.DoneTaskTheme
+import com.joseleandro.donetask.ui.viewmodel.NavigationViewModel
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 import java.util.UUID
+import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListDetailScreen(
     listId: UUID
 ) {
+
+    val navigationViewModel: NavigationViewModel = koinViewModel()
     val listData = myListsMock.first { it.id == listId }
+
+    ListDetailScreen(
+        listData = listData,
+        onBack = navigationViewModel::onBack,
+        onNavigate = navigationViewModel::navigateByScreen
+    )
+
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ListDetailScreen(
+    listData: ListModel,
+    onBack: () -> Unit,
+    onNavigate: (Screen) -> Unit
+) {
+
     val density = LocalDensity.current
     val scope = rememberCoroutineScope()
 
     var headerHeightPx by remember { mutableFloatStateOf(0f) }
     var cardHeightPx by remember { mutableFloatStateOf(0f) }
-    
+
     val spacer1Px = with(density) { 24.dp.toPx() }
     val spacer2Px = with(density) { 16.dp.toPx() }
 
-    val maxCollapsePx = if (headerHeightPx > 0f && cardHeightPx > 0f) {
-        headerHeightPx + cardHeightPx + spacer1Px + spacer2Px
-    } else {
-        with(density) { 450.dp.toPx() }
-    }
+    val stickyPointPx = headerHeightPx + spacer1Px
+
+    val maxCollapsePx = if (headerHeightPx > 0f) stickyPointPx else with(density) { 250.dp.toPx() }
 
     var offsetY by remember { mutableFloatStateOf(0f) }
-    val collapseFraction = (offsetY / maxCollapsePx).coerceIn(0f, 1f)
-
-    // Ponto para mostrar o título na TopBar (ex: quando o header original sumir 80%)
-//    val showTopBarInfo by remember {
-//        derivedStateOf { collapseFraction > 0.8f }
-//    }
 
     val showTopBarInfo by remember {
         derivedStateOf {
-            val currentFraction = (offsetY / maxCollapsePx).coerceIn(0f, 1f)
-            currentFraction > 0.8f
+            headerHeightPx > 0 && offsetY > headerHeightPx
         }
     }
-
-    val animatedCollapse by animateFloatAsState(
-        targetValue = collapseFraction,
-        animationSpec = tween(250),
-        label = "collapse"
-    )
 
     val listState = rememberLazyListState()
 
@@ -125,6 +136,11 @@ fun ListDetailScreen(
             }
         }
     }
+
+    val headerFadeProgress = (offsetY / headerHeightPx)
+        .coerceIn(0f, 1f)
+
+    val headerAlpha = 1f - headerFadeProgress
 
 
     val nestedScrollConnection = remember {
@@ -167,35 +183,17 @@ fun ListDetailScreen(
                         enter = fadeIn(),
                         exit = fadeOut()
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .background(listData.color, MaterialTheme.shapes.small),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = listData.icon,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                            Text(
-                                text = listData.name,
-                                color = Color.White,
-                                style = MaterialTheme.typography.titleMedium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
+
+                        ListDetailTitle(
+                            nameList = listData.name,
+                            icon = listData.icon,
+                            color = listData.color
+                        )
+
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = onBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = null,
@@ -203,13 +201,30 @@ fun ListDetailScreen(
                         )
                     }
                 },
+                actions = {
+                    IconButton(
+                        onClick = {}
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = stringResource(R.string.mais_opcoes)
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
+                    containerColor = Color.Transparent,
+                    actionIconContentColor = Color.White
                 )
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = {}) {
+            FloatingActionButton(
+                containerColor = listData.color,
+                contentColor = Color.White,
+                onClick = {
+                    onNavigate(Screen.TaskCreateScreen)
+                }
+            ) {
                 Icon(Icons.Default.Add, contentDescription = null)
             }
         },
@@ -224,113 +239,127 @@ fun ListDetailScreen(
         )
     ) { innerPadding ->
 
-        Column(
+        Box(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
                 .nestedScroll(nestedScrollConnection)
-                .pointerInput(Unit) {
-                    detectVerticalDragGestures { change, dragAmount ->
-                        change.consume()
-                        handleManualScroll(dragAmount)
-                    }
-                }
         ) {
 
-            // Header dinâmico
-            Box(
+            ListDetailHeader(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .then(
-                        if (headerHeightPx > 0f) Modifier.height(with(density) { 
-                            (headerHeightPx - offsetY).coerceAtLeast(0f).toDp() 
-                        }) else Modifier.wrapContentHeight()
-                    )
-                    .clipToBounds()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .onSizeChanged { size ->
-                            if (headerHeightPx == 0f && size.height > 0) {
-                                headerHeightPx = size.height.toFloat()
-                            }
-                        }
-                        .fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                listData.color,
-                                shape = MaterialTheme.shapes.extraLarge
-                            )
-                            .padding(16.dp)
-                    ) {
-                        Icon(
-                            imageVector = listData.icon,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(40.dp)
-                        )
+                    .graphicsLayer {
+                        alpha = headerAlpha
+                        translationY = -offsetY * 0.3f
                     }
+                    .onSizeChanged {
+                        if (headerHeightPx == 0f) headerHeightPx = it.height.toFloat()
+                    },
+                color = listData.color,
+                icon = listData.icon,
+                nameList = listData.name
+            )
 
-                    Text(
-                        text = listData.name,
-                        color = Color.White,
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Progress Card dinâmico
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .then(
-                        if (cardHeightPx > 0f) Modifier.height(with(density) { 
-                            val cardOffset = (offsetY - headerHeightPx - spacer1Px).coerceAtLeast(0f)
-                            (cardHeightPx - cardOffset).coerceAtLeast(0f).toDp() 
-                        }) else Modifier.wrapContentHeight()
-                    )
-                    .clipToBounds()
+                    .offset {
+                        val y = (stickyPointPx - offsetY).coerceAtLeast(0f)
+                        IntOffset(0, y.roundToInt())
+                    }
+                    .onSizeChanged { if (cardHeightPx == 0f) cardHeightPx = it.height.toFloat() }
             ) {
-
-                    ProgressCard(
-                        modifier = Modifier.onSizeChanged { size ->
-                            if (cardHeightPx == 0f && size.height > 0) {
-                                cardHeightPx = size.height.toFloat()
-                            }
-                        },
-                        listData = listData,
-                        collapseFraction = animatedCollapse
-                    )
-
+                ProgressCard(
+                    listData = listData,
+                )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            val currentHeaderVisiblePx =
+                (stickyPointPx + cardHeightPx - offsetY).coerceAtLeast(cardHeightPx)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(with(density) { currentHeaderVisiblePx.toDp() })
+                    .pointerInput(Unit) {
+                        detectVerticalDragGestures { change, dragAmount ->
+                            change.consume()
+                            handleManualScroll(dragAmount)
+                        }
+                    }
+            )
 
-            // 📜 LISTA
             Surface(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .offset {
+                        val listStartPx = stickyPointPx + cardHeightPx + spacer2Px
+                        val y = (listStartPx - offsetY).coerceAtLeast(cardHeightPx + spacer2Px)
+                        IntOffset(0, y.roundToInt())
+                    },
                 color = Color.White,
                 shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
             ) {
                 LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 80.dp)
+                    contentPadding = PaddingValues(bottom = 350.dp)
                 ) {
+                    stickyHeader {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(color = Color.White)
+                                .padding(horizontal = 16.dp),
+                            color = Color.White,
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    modifier = Modifier.size(20.dp),
+                                    imageVector = Icons.Default.TaskAlt,
+                                    contentDescription = null,
+                                    tint = Color.DarkGray.copy(alpha = .5f)
+                                )
+                                Text(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(horizontal = 4.dp),
+                                    text = "Minhas tarefas",
+                                    style = MaterialTheme.typography.labelLarge.copy(
+                                        color = Color.DarkGray.copy(
+                                            alpha = .5f
+                                        )
+                                    )
+                                )
+
+                                IconButton(
+                                    onClick = {}
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.Sort,
+                                        contentDescription = null,
+                                        tint = Color.DarkGray.copy(
+                                            alpha = .5f
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
                     items(20) {
                         ListItem(
+                            modifier = Modifier.padding(horizontal = 4.dp),
                             colors = ListItemDefaults.colors(containerColor = Color.White),
                             headlineContent = {
                                 Text(
                                     "Tarefa de exemplo",
-                                    style = MaterialTheme.typography.titleMedium.copy(color = Color.DarkGray)
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        color = Color.DarkGray.copy(
+                                            alpha = .8f
+                                        )
+                                    )
                                 )
                             },
                             trailingContent = { RadioButton(selected = false, onClick = {}) }
@@ -342,6 +371,73 @@ fun ListDetailScreen(
     }
 }
 
+@Composable
+fun ListDetailTitle(
+    modifier: Modifier = Modifier,
+    nameList: String,
+    color: Color,
+    icon: ImageVector,
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .background(color, MaterialTheme.shapes.small),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+        Text(
+            text = nameList,
+            color = Color.White,
+            style = MaterialTheme.typography.titleMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+fun ListDetailHeader(
+    modifier: Modifier = Modifier,
+    color: Color,
+    icon: ImageVector,
+    nameList: String,
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.height(16.dp))
+        Box(
+            modifier = Modifier
+                .background(color, shape = MaterialTheme.shapes.extraLarge)
+                .padding(16.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(40.dp)
+            )
+        }
+        Text(
+            text = nameList,
+            color = Color.White,
+            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+        )
+    }
+}
+
 
 @Preview(showBackground = true)
 @Composable
@@ -350,7 +446,13 @@ private fun ListDetailScreenDarkPreview() {
         dynamicColor = false,
         darkTheme = true
     ) {
-        ListDetailScreen(listId = myListsMock.first().id)
+        val listData = myListsMock.first()
+
+        ListDetailScreen(
+            listData = listData,
+            onNavigate = {},
+            onBack = {}
+        )
     }
 }
 
@@ -361,6 +463,12 @@ private fun ListDetailScreenLightPreview() {
         dynamicColor = false,
         darkTheme = false
     ) {
-        ListDetailScreen(listId = myListsMock.first().id)
+        val listData = myListsMock.first()
+
+        ListDetailScreen(
+            listData = listData,
+            onNavigate = {},
+            onBack = {}
+        )
     }
 }

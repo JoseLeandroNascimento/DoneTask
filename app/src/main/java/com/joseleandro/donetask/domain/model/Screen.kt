@@ -8,4 +8,6 @@ sealed interface Screen {
 
     data class ListDetailScreen(val listId: UUID) : Screen
 
+    data object TaskCreateScreen : Screen
+
 }

@@ -11,4 +11,8 @@
     <string name="voltar">voltar</string>
     <string name="icone_da_lista_detalhes">Icone da lista detalhes</string>
     <string name="adicionar_tarefa">Adicionar tarefa</string>
+    <string name="adicionar_subtarefa">Adicionar subtarefa</string>
+    <string name="data">Data</string>
+    <string name="hora">Hora</string>
+    <string name="fechar">fechar</string>
 </resources>
