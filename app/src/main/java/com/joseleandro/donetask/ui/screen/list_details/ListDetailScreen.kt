@@ -82,7 +82,6 @@ import kotlin.math.roundToInt
 fun ListDetailScreen(
     listId: UUID
 ) {
-
     val navigationViewModel: NavigationViewModel = koinViewModel()
     val listData = myListsMock.first { it.id == listId }
 
@@ -91,7 +90,6 @@ fun ListDetailScreen(
         onBack = navigationViewModel::onBack,
         onNavigate = navigationViewModel::navigateByScreen
     )
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -101,7 +99,6 @@ fun ListDetailScreen(
     onBack: () -> Unit,
     onNavigate: (Screen) -> Unit
 ) {
-
     val density = LocalDensity.current
     val scope = rememberCoroutineScope()
 
@@ -112,14 +109,13 @@ fun ListDetailScreen(
     val spacer2Px = with(density) { 16.dp.toPx() }
 
     val stickyPointPx = headerHeightPx + spacer1Px
-
     val maxCollapsePx = if (headerHeightPx > 0f) stickyPointPx else with(density) { 250.dp.toPx() }
 
     var offsetY by remember { mutableFloatStateOf(0f) }
 
     val showTopBarInfo by remember {
         derivedStateOf {
-            headerHeightPx > 0 && offsetY > headerHeightPx
+            headerHeightPx > 0 && offsetY > headerHeightPx * 0.8f
         }
     }
 
@@ -137,17 +133,15 @@ fun ListDetailScreen(
         }
     }
 
-    val headerFadeProgress = (offsetY / headerHeightPx)
+    val headerFadeProgress = (offsetY / (headerHeightPx.coerceAtLeast(1f)))
         .coerceIn(0f, 1f)
-
     val headerAlpha = 1f - headerFadeProgress
-
 
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 val delta = available.y
-                if (delta < 0 && offsetY < maxCollapsePx) { // Scrolling up
+                if (delta < 0 && offsetY < maxCollapsePx) {
                     val oldOffset = offsetY
                     offsetY = (offsetY - delta).coerceAtMost(maxCollapsePx)
                     val consumed = offsetY - oldOffset
@@ -183,13 +177,11 @@ fun ListDetailScreen(
                         enter = fadeIn(),
                         exit = fadeOut()
                     ) {
-
                         ListDetailTitle(
                             nameList = listData.name,
                             icon = listData.icon,
                             color = listData.color
                         )
-
                     }
                 },
                 navigationIcon = {
@@ -202,9 +194,7 @@ fun ListDetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(
-                        onClick = {}
-                    ) {
+                    IconButton(onClick = {}) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = stringResource(R.string.mais_opcoes)
@@ -213,7 +203,7 @@ fun ListDetailScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Transparent,
-                    actionIconContentColor = Color.White
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
         },
@@ -221,11 +211,13 @@ fun ListDetailScreen(
             FloatingActionButton(
                 containerColor = listData.color,
                 contentColor = Color.White,
-                onClick = {
-                    onNavigate(Screen.TaskCreateScreen)
-                }
+                onClick = { onNavigate(Screen.TaskCreateScreen) }
             ) {
-                Icon(Icons.Default.Add, contentDescription = null)
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.surface
+                )
             }
         },
         modifier = Modifier.background(
@@ -238,20 +230,18 @@ fun ListDetailScreen(
             )
         )
     ) { innerPadding ->
-
         Box(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
                 .nestedScroll(nestedScrollConnection)
         ) {
-
             ListDetailHeader(
                 modifier = Modifier
                     .fillMaxWidth()
                     .graphicsLayer {
                         alpha = headerAlpha
-                        translationY = -offsetY * 0.3f
+                        translationY = -offsetY * 0.4f
                     }
                     .onSizeChanged {
                         if (headerHeightPx == 0f) headerHeightPx = it.height.toFloat()
@@ -270,9 +260,7 @@ fun ListDetailScreen(
                     }
                     .onSizeChanged { if (cardHeightPx == 0f) cardHeightPx = it.height.toFloat() }
             ) {
-                ProgressCard(
-                    listData = listData,
-                )
+                ProgressCard(listData = listData)
             }
 
             val currentHeaderVisiblePx =
@@ -297,52 +285,47 @@ fun ListDetailScreen(
                         val y = (listStartPx - offsetY).coerceAtLeast(cardHeightPx + spacer2Px)
                         IntOffset(0, y.roundToInt())
                     },
-                color = Color.White,
-                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 1.dp,
+                shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
             ) {
                 LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 350.dp)
+                    contentPadding = PaddingValues(top = 8.dp, bottom = 350.dp)
                 ) {
                     stickyHeader {
                         Surface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(color = Color.White)
-                                .padding(horizontal = 16.dp),
-                            color = Color.White,
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.surface,
                         ) {
                             Row(
+                                modifier = Modifier
+                                    .padding(horizontal = 24.dp, vertical = 16.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
                                     modifier = Modifier.size(20.dp),
                                     imageVector = Icons.Default.TaskAlt,
                                     contentDescription = null,
-                                    tint = Color.DarkGray.copy(alpha = .5f)
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                                 )
                                 Text(
                                     modifier = Modifier
                                         .weight(1f)
-                                        .padding(horizontal = 4.dp),
+                                        .padding(horizontal = 12.dp),
                                     text = "Minhas tarefas",
-                                    style = MaterialTheme.typography.labelLarge.copy(
-                                        color = Color.DarkGray.copy(
-                                            alpha = .5f
-                                        )
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontWeight = FontWeight.Bold
                                     )
                                 )
-
-                                IconButton(
-                                    onClick = {}
-                                ) {
+                                IconButton(onClick = {}) {
                                     Icon(
+                                        modifier = Modifier.size(20.dp),
                                         imageVector = Icons.AutoMirrored.Filled.Sort,
                                         contentDescription = null,
-                                        tint = Color.DarkGray.copy(
-                                            alpha = .5f
-                                        )
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                                     )
                                 }
                             }
@@ -350,15 +333,14 @@ fun ListDetailScreen(
                     }
                     items(20) {
                         ListItem(
-                            modifier = Modifier.padding(horizontal = 4.dp),
-                            colors = ListItemDefaults.colors(containerColor = Color.White),
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                             headlineContent = {
                                 Text(
                                     "Tarefa de exemplo",
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        color = Color.DarkGray.copy(
-                                            alpha = .8f
-                                        )
+                                    style = MaterialTheme.typography.bodyLarge.copy(
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontWeight = FontWeight.Medium
                                     )
                                 )
                             },
@@ -392,14 +374,14 @@ fun ListDetailTitle(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = Color.White,
+                tint = MaterialTheme.colorScheme.surface,
                 modifier = Modifier.size(18.dp)
             )
         }
         Text(
             text = nameList,
-            color = Color.White,
-            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.surface,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -414,10 +396,9 @@ fun ListDetailHeader(
     nameList: String,
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier.padding(top = 32.dp, bottom = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
         Box(
             modifier = Modifier
                 .background(color, shape = MaterialTheme.shapes.extraLarge)
@@ -426,49 +407,31 @@ fun ListDetailHeader(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(40.dp)
+                tint = MaterialTheme.colorScheme.surface,
+                modifier = Modifier.size(48.dp)
             )
         }
+        Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = nameList,
-            color = Color.White,
-            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+            color = MaterialTheme.colorScheme.surface,
+            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
         )
     }
 }
 
-
 @Preview(showBackground = true)
 @Composable
 private fun ListDetailScreenDarkPreview() {
-    DoneTaskTheme(
-        dynamicColor = false,
-        darkTheme = true
-    ) {
-        val listData = myListsMock.first()
-
-        ListDetailScreen(
-            listData = listData,
-            onNavigate = {},
-            onBack = {}
-        )
+    DoneTaskTheme(dynamicColor = false, darkTheme = true) {
+        ListDetailScreen(listData = myListsMock.first(), onNavigate = {}, onBack = {})
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun ListDetailScreenLightPreview() {
-    DoneTaskTheme(
-        dynamicColor = false,
-        darkTheme = false
-    ) {
-        val listData = myListsMock.first()
-
-        ListDetailScreen(
-            listData = listData,
-            onNavigate = {},
-            onBack = {}
-        )
+    DoneTaskTheme(dynamicColor = false, darkTheme = false) {
+        ListDetailScreen(listData = myListsMock.first(), onNavigate = {}, onBack = {})
     }
 }

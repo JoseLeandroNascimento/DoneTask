@@ -54,8 +54,8 @@ fun ProgressCard(
             .padding(horizontal = 16.dp)
             .fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = Color.White,
-        tonalElevation = 6.dp
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp
     ) {
 
         Column(
@@ -65,7 +65,7 @@ fun ProgressCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("Progresso Atual", color = Color.Gray)
+            Text("Progresso Atual", color = MaterialTheme.colorScheme.onSurface.copy(alpha = .6f))
 
             Box(contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(
@@ -78,7 +78,7 @@ fun ProgressCard(
 
                 Text(
                     text = "$percentage%",
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.headlineSmall.copy(color = MaterialTheme.colorScheme.onSurface),
                     fontWeight = FontWeight.Bold
                 )
             }

@@ -15,4 +15,18 @@
     <string name="data">Data</string>
     <string name="hora">Hora</string>
     <string name="fechar">fechar</string>
+    <string name="nova_tarefa">Nova Tarefa</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="criar_tarefa">Criar Tarefa</string>
+    <string name="categoria">Categoria</string>
+    <string name="informa_es">Informações</string>
+    <string name="ex_comprar_leite">Ex: Comprar leite</string>
+    <string name="lembrete">Lembrete</string>
+    <string name="alerta_ativado">Alerta Ativado</string>
+    <string name="alerta_desativado">Alerta Desativado</string>
+    <string name="notificar_sobre_esta_tarefa">Notificar sobre esta tarefa</string>
+    <string name="horario">Horário</string>
+    <string name="repetir">Repetir</string>
+    <string name="subtarefas">Subtarefas</string>
+    <string name="adicione_subtarefas">Adicione subtarefas...</string>
 </resources>
