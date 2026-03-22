@@ -30,14 +30,14 @@ sealed interface TabScreen {
                 icon = Icons.Default.Home
             ),
             BottomNavItem(
-                screen = TabScreen.ProgressTabScreen,
-                label = "Progresso",
-                icon = Icons.Default.BarChart
-            ),
-            BottomNavItem(
                 screen = TabScreen.ReminderTabScreen,
                 label = "Lembretes",
                 icon = Icons.Default.Timer
+            ),
+            BottomNavItem(
+                screen = TabScreen.ProgressTabScreen,
+                label = "Progresso",
+                icon = Icons.Default.BarChart
             ),
             BottomNavItem(
                 screen = TabScreen.ProfileTabScreen,

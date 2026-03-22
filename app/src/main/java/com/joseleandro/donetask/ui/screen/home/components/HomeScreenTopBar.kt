@@ -12,6 +12,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import com.joseleandro.donetask.R
 import com.joseleandro.donetask.ui.theme.DoneTaskTheme
@@ -23,7 +24,9 @@ fun HomeScreenTopBar(modifier: Modifier = Modifier) {
         title = {
             Text(
                 text = stringResource(R.string.minhas_listas),
-                style = MaterialTheme.typography.headlineSmall
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontWeight = FontWeight.Bold
+                )
             )
         },
         navigationIcon = {

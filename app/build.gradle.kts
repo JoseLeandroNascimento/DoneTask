@@ -14,6 +14,7 @@ android {
         minSdk = 24
         targetSdk = 36
         versionCode = 1
+        multiDexEnabled = true
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -29,6 +30,7 @@ android {
         }
     }
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
@@ -38,6 +40,8 @@ android {
 }
 
 dependencies {
+
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     //Navigation 3
     implementation(libs.androidx.navigation3.ui)
@@ -51,6 +55,8 @@ dependencies {
     implementation(libs.koin.androidx.compose)
     implementation(libs.koin.annotations)
     ksp(libs.koin.ksp.compiler)
+
+    implementation(libs.compose)
 
     implementation(libs.androidx.material.icon.extended)
     implementation(libs.androidx.core.ktx)

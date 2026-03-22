@@ -3,9 +3,11 @@ package com.joseleandro.donetask.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import com.joseleandro.donetask.domain.model.Screen
 import com.joseleandro.donetask.domain.model.TabScreen
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flow
 
 class NavigationViewModel : ViewModel() {
 
@@ -15,8 +17,8 @@ class NavigationViewModel : ViewModel() {
     private val _screenBackStack = MutableStateFlow<List<Screen>>(listOf(Screen.MainScreen))
     val screenBackStack: StateFlow<List<Screen>> = _screenBackStack.asStateFlow()
 
-    val currentTab: TabScreen
-        get() = _tabBackStack.value.last()
+    val currentTab: Flow<TabScreen>
+        get() = flow { _tabBackStack.collect { emit(it.last()) } }
 
     val currentScreen: Screen
         get() = _screenBackStack.value.last()
@@ -25,7 +27,7 @@ class NavigationViewModel : ViewModel() {
         _screenBackStack.value += screen
     }
 
-    fun onBack(){
+    fun onBack() {
         _screenBackStack.value = _screenBackStack.value.dropLast(1)
     }
 

@@ -30,6 +30,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -71,6 +73,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
@@ -78,6 +82,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -119,6 +124,8 @@ fun TaskCreateScreen(
 
     val subtasks = remember { mutableStateListOf<SubtaskModel>() }
     var nameSubtask by remember { mutableStateOf("") }
+
+    val (nameInput, noteInput) = remember { FocusRequester.createRefs() }
 
 
     Scaffold(
@@ -216,6 +223,7 @@ fun TaskCreateScreen(
                 OutlinedTextField(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .focusRequester(nameInput)
                         .padding(horizontal = 16.dp),
                     label = { Text("O que precisa ser feito?") },
                     placeholder = { Text(stringResource(R.string.ex_comprar_leite)) },
@@ -225,11 +233,20 @@ fun TaskCreateScreen(
                         unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
                         focusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                     ),
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                           noteInput.requestFocus()
+                        }
+                    ),
                     shape = MaterialTheme.shapes.medium
                 )
                 OutlinedTextField(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .focusRequester(noteInput)
                         .padding(horizontal = 16.dp),
                     label = {
                         Row(
@@ -461,7 +478,7 @@ fun TaskCreateScreen(
                                     onCheckedChange = {
                                         subtasks[index] = subtask.copy(checked = !subtask.checked)
                                     },
-                                    trailingIcon =  Icons.Default.Close,
+                                    trailingIcon = Icons.Default.Close,
                                     onTrailingIconClick = {
                                         subtasks.removeAt(index)
                                     }
@@ -652,7 +669,9 @@ private fun PriorityItem(
 @Composable
 private fun TaskReminderRow(icon: ImageVector, label: String, value: String) {
     Row(
-        modifier = Modifier.fillMaxWidth().height(48.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(icon, null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
